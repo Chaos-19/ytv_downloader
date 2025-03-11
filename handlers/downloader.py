@@ -76,7 +76,7 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
             write_timeout=60,  # Increase timeout
         )
         try:
-          os.remove(zip_file_path)
           os.rmdir(os.path.join(os.getcwd(),"download"))
+          os.remove(zip_file_path)
         except Exception as e:
           print("Error happened " + e.__str__())
