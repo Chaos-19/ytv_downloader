@@ -36,7 +36,7 @@ PORT = int(os.getenv("PORT", 8000))  # Port number
 TOKEN = os.getenv("BOT_TOKEN")  # Telegram Bot Token
 
 # Initialize Flask app
-app = Flask(__name__)
+flask_app = Flask(__name__)
 
 # Telegram Application
 application = Application.builder().token(TOKEN).updater(None).build()
@@ -46,14 +46,14 @@ application.add_handler(CommandHandler(["start", "help"], start))
 application.add_handler(MessageHandler(filters.Regex(r"^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|playlist\?list=)|youtu\.be\/)[\w\-]+"), select_format))
 application.add_handler(CallbackQueryHandler(download))
 
-@app.post(f"/{TOKEN}")  # Webhook endpoint for Telegram updates
+@flask_app.post(f"/{TOKEN}")  # Webhook endpoint for Telegram updates
 async def telegram_webhook() -> Response:
     """Handle Telegram webhook updates."""
     update = Update.de_json(request.json, application.bot)
     await application.update_queue.put(update)
     return Response(status=HTTPStatus.OK)
 
-@app.get("/healthcheck")
+@flask_app.get("/healthcheck")
 async def healthcheck() -> Response:
     """Health check endpoint."""
     return Response("Bot is running fine!", status=HTTPStatus.OK)
@@ -63,10 +63,13 @@ async def main():
     # Set webhook
     await application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
 
+    # Wrap Flask app to ASGI
+    asgi_app = WsgiToAsgi(flask_app)
+
     # Start web server
     webserver = uvicorn.Server(
         config=uvicorn.Config(
-            app=WsgiToAsgi(app),
+            app=asgi_app,  # Ensure you're passing the ASGI-wrapped Flask app
             port=PORT,
             host="0.0.0.0",
         )
