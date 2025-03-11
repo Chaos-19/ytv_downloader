@@ -44,36 +44,25 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await query.answer()  # Acknowledge the button press
     chat_id = update.effective_chat.id
+    
+    user_data = get_data(chat_id)
 
     if selected_format == "mp3":
         await update.callback_query.edit_message_text(
             "🎶 *You chose Audio \(MP3\)\!* Preparing your download\.\.\.",
             parse_mode="MarkdownV2",
         )
-        
-        user_data = get_data(chat_id)
-        # Specify the path to your zip file
-        zip_file_path =await download_ytv_and_zip(user_data.url,selected_format)
-        
-        # Send the zip file to the user
-        await context.bot.send_document(
-            chat_id=chat_id,
-            document=open(zip_file_path, 'rb'),
-            filename=os.path.basename(zip_file_path),  # Optional, filename for the document
-            caption="Here is your zip file!"  # Optional, caption for the file
-        )
- 
-        
     elif selected_format == "mp4":
-        '''
         await update.callback_query.edit_message_text(
             "📺 *You chose Video \(MP4\)\!* Fetching your file\.\.\.",
             parse_mode="MarkdownV2",
-        )'''
-        user_data = get_data(chat_id)
-        
-        print(user_data.get("url"))
-        
+        )
+    else:
+        await update.callback_query.edit_message_text(
+            "❌ *Download canceled\.* Let me know if you need anything else\!"
+             ,parse_mode="MarkdownV2"
+             )
+    if selected_format in ["mp4","mp3"]:
         # Specify the path to your zip file
         zip_file_path = await download_ytv_and_zip(user_data.get("url"),selected_format)
         
@@ -86,8 +75,8 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
             read_timeout=60,  # Increase timeout
             write_timeout=60,  # Increase timeout
         )
-    else:
-        await update.callback_query.edit_message_text(
-            "❌ *Download canceled\.* Let me know if you need anything else\!"
-             ,parse_mode="MarkdownV2"
-             )
+        try:
+          os.remove(zip_file_path)
+          os.rmdir("./download")
+        except Exception as e:
+          print("Error happened " + e.__str__())
