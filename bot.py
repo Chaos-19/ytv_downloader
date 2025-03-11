@@ -2,7 +2,6 @@ import logging
 import os
 import asyncio
 from dotenv import load_dotenv
-from threading import Thread
 
 from flask import Flask, request, Response, abort
 from http import HTTPStatus
@@ -20,6 +19,7 @@ from handlers.start import start
 from handlers.downloader import select_format, download
 
 import uvicorn
+from asgiref.wsgi import WsgiToAsgi
 
 # Load environment variables
 load_dotenv()
@@ -46,35 +46,44 @@ application.add_handler(CommandHandler(["start", "help"], start))
 application.add_handler(MessageHandler(filters.Regex(r"^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|playlist\?list=)|youtu\.be\/)[\w\-]+"), select_format))
 application.add_handler(CallbackQueryHandler(download))
 
-@app.post(f"/{TOKEN}")  # Webhook endpoint for Telegram updates
-async def telegram_webhook() -> Response:
+@app.post(f"/{TOKEN}")
+def telegram_webhook() -> Response:
     """Handle Telegram webhook updates."""
     update = Update.de_json(request.json, application.bot)
-    await application.update_queue.put(update)
+    # Schedule the coroutine in the main event loop
+    loop = app.config['LOOP']
+    asyncio.run_coroutine_threadsafe(application.update_queue.put(update), loop)
     return Response(status=HTTPStatus.OK)
 
 @app.get("/healthcheck")
-async def healthcheck() -> Response:
+def healthcheck() -> Response:
     """Health check endpoint."""
     return Response("Bot is running fine!", status=HTTPStatus.OK)
 
-def run_flask():
-    """Run the Flask app."""
-    app.run(host="0.0.0.0", port=PORT)
-
 async def main():
     """Start the bot and web server."""
+    # Store the event loop in Flask's config
+    app.config['LOOP'] = asyncio.get_running_loop()
+    
     # Set webhook
     await application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
 
-    # Start Flask in a separate thread
-    flask_thread = Thread(target=run_flask)
-    flask_thread.start()
+    # Wrap Flask app to ASGI
+    asgi_app = WsgiToAsgi(app)
 
-    # Run bot application
+    # Start web server
+    webserver = uvicorn.Server(
+        config=uvicorn.Config(
+            app=asgi_app,
+            port=PORT,
+            host="0.0.0.0",
+        )
+    )
+
+    # Run bot application and web server
     async with application:
         await application.start()
-        await asyncio.Event().wait() #keep the async loop running.
+        await webserver.serve()
         await application.stop()
 
 if __name__ == "__main__":
