@@ -2,6 +2,7 @@ import logging
 import os
 import asyncio
 from dotenv import load_dotenv
+from threading import Thread
 
 from flask import Flask, request, Response, abort
 from http import HTTPStatus
@@ -19,7 +20,6 @@ from handlers.start import start
 from handlers.downloader import select_format, download
 
 import uvicorn
-from asgiref.wsgi import WsgiToAsgi
 
 # Load environment variables
 load_dotenv()
@@ -58,27 +58,23 @@ async def healthcheck() -> Response:
     """Health check endpoint."""
     return Response("Bot is running fine!", status=HTTPStatus.OK)
 
+def run_flask():
+    """Run the Flask app."""
+    app.run(host="0.0.0.0", port=PORT)
+
 async def main():
     """Start the bot and web server."""
     # Set webhook
     await application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
 
-    # Wrap Flask app to ASGI
-    asgi_app = WsgiToAsgi(app)
+    # Start Flask in a separate thread
+    flask_thread = Thread(target=run_flask)
+    flask_thread.start()
 
-    # Start web server
-    webserver = uvicorn.Server(
-        config=uvicorn.Config(
-            app=asgi_app,  # Ensure you're passing the ASGI-wrapped Flask app
-            port=PORT,
-            host="0.0.0.0",
-        )
-    )
-
-    # Run bot application and web server
+    # Run bot application
     async with application:
         await application.start()
-        await webserver.serve()
+        await asyncio.Event().wait() #keep the async loop running.
         await application.stop()
 
 if __name__ == "__main__":
