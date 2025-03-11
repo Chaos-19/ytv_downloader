@@ -77,6 +77,6 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         try:
           os.remove(zip_file_path)
-          os.remove("download")
+          os.rmdir("download")
         except Exception as e:
           print("Error happened " + e.__str__())
