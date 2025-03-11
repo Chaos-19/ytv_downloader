@@ -12,7 +12,7 @@ async def select_format(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Get the URL sent by the user
     url = update.message.text
     
-    set_data("update.message.chat.id", {
+    set_data(update.effective_chat.id, {
         "url":url,
         "status": "started"  # Custom status
     })
@@ -43,7 +43,7 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
     selected_format = query.data  # Get the selected format (mp3 or mp4)
 
     await query.answer()  # Acknowledge the button press
-    chat_id = "update.message.chat.id"
+    chat_id = update.effective_chat.id
 
     if selected_format == "mp3":
         await update.callback_query.edit_message_text(
@@ -65,10 +65,11 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
  
         
     elif selected_format == "mp4":
+        '''
         await update.callback_query.edit_message_text(
             "📺 *You chose Video \(MP4\)\!* Fetching your file\.\.\.",
             parse_mode="MarkdownV2",
-        )
+        )'''
         user_data = get_data(chat_id)
         
         print(user_data.get("url"))
@@ -80,8 +81,10 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_document(
             chat_id=chat_id,
             document=open(zip_file_path, 'rb'),
-            filename=os.path.basename(zip_file_path),  # Optional, filename for the document
-            caption="Here is your zip file!"  # Optional, caption for the file
+            filename=os.path.basename(zip_file_path),
+            caption="Here is your zip file!",
+            read_timeout=60,  # Increase timeout
+            write_timeout=60,  # Increase timeout
         )
     else:
         await update.callback_query.edit_message_text(

@@ -10,6 +10,7 @@ import yt_dlp
 import zipfile
 import os
 import json
+import asyncio
 
 
 from handlers.start import start
@@ -52,8 +53,10 @@ async def download_ytv_and_zip(ytv_url):
     return f"Downloading {download_title} and zipping..."
 
 
+
+
 if __name__ == '__main__':
-    application = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
+    application = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).read_timeout(30).write_timeout(30).build()
     
     start_handler = CommandHandler('start', start)
     #ytv_metadata_handler = CommandHandler('info', fetch_metadata)
