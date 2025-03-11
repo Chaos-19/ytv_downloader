@@ -5,7 +5,7 @@ from services.youtube import download_ytv_and_zip
 from database.db import set_data,get_data
 
 import os
-import shutil
+from services.utils import delete_playlist_data
 
 
 async def select_format(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -78,6 +78,6 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         try:
           os.remove(zip_file_path)
-          shutil.rmtree("download")
+          delete_playlist_data("download")
         except Exception as e:
           print("Error happened " + e.__str__())
