@@ -66,6 +66,7 @@ async def init_application():
 
     async with application:
         await application.start()
+        await webserver.serve()
         await application.stop()
 
 async def main():
