@@ -2,7 +2,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from services.youtube import download_ytv_and_zip
-from database.db import set_data,get_data
+from database.db import set_data,get_data,delete_data
 
 import os
 from services.utils import delete_playlist_data
@@ -64,9 +64,33 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
              ,parse_mode="MarkdownV2"
              )
     if selected_format in ["mp4","mp3"]:
+        zip_file_path = await download_ytv_and_zip(user_data.get("url"), selected_format)
+        
+        # Use context manager to ensure file is properly closed
+        with open(zip_file_path, 'rb') as file:
+            await context.bot.send_document(
+                chat_id=chat_id,
+                document=file,
+                filename=os.path.basename(zip_file_path),
+                caption="Here is your zip file!",
+                read_timeout=60,
+                write_timeout=60,
+            )
+        
+        # Delete temporary files after successful send
+        try:
+            delete_data(chat_id)
+            os.remove(zip_file_path)
+            delete_playlist_data("download")
+        except Exception as e:
+            print(f"Error occurred during cleanup: {e}")
+        
+ '''
+    if selected_format in ["mp4","mp3"]:
         # Specify the path to your zip file
         zip_file_path = await download_ytv_and_zip(user_data.get("url"),selected_format)
         
+        print("send_document")
         # Send the zip file to the user
         await context.bot.send_document(
             chat_id=chat_id,
@@ -76,3 +100,6 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
             read_timeout=60,  # Increase timeout
             write_timeout=60,  # Increase timeout
         )
+        delete_data(chat_id)
+        print("delete_data")
+  '''

@@ -6,8 +6,6 @@ import os
 from .utils import zip_folder
 
 
-
-
 async def fetch_metadata(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Fetch YouTube metadata asynchronously."""
     ytv_url = "https://youtube.com/watch?v=-qjE8JkIVoQ&si=QeI-Vt4JGxV6Sr9Y"

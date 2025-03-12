@@ -9,12 +9,6 @@ async def zip_folder(folder_path, zip_filename):
                 file_path = os.path.join(root, file)
                 arcname = os.path.relpath(file_path, folder_path)  # Keep folder structure
                 zipf.write(file_path, arcname)
-    try:
-      os.remove(zip_file_path)
-      delete_playlist_data("download")
-    except Exception as e:
-      print("Error happened " + e.__str__())
-      
     return zip_filename
     
     
