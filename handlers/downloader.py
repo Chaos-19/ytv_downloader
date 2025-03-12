@@ -76,8 +76,3 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
             read_timeout=60,  # Increase timeout
             write_timeout=60,  # Increase timeout
         )
-        try:
-          os.remove(zip_file_path)
-          delete_playlist_data("download")
-        except Exception as e:
-          print("Error happened " + e.__str__())
