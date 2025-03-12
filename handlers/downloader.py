@@ -84,22 +84,3 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
             delete_playlist_data("download")
         except Exception as e:
             print(f"Error occurred during cleanup: {e}")
-        
- '''
-    if selected_format in ["mp4","mp3"]:
-        # Specify the path to your zip file
-        zip_file_path = await download_ytv_and_zip(user_data.get("url"),selected_format)
-        
-        print("send_document")
-        # Send the zip file to the user
-        await context.bot.send_document(
-            chat_id=chat_id,
-            document=open(zip_file_path, 'rb'),
-            filename=os.path.basename(zip_file_path),
-            caption="Here is your zip file!",
-            read_timeout=60,  # Increase timeout
-            write_timeout=60,  # Increase timeout
-        )
-        delete_data(chat_id)
-        print("delete_data")
-  '''
