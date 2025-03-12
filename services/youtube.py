@@ -21,6 +21,7 @@ async def download_ytv_and_zip(ytv_url,format_choice):
     #ydl_opts = {"outtmpl": "download/%(title)s.%(ext)s"}
     ydl_opts = {
             "outtmpl": "download/%(title)s.%(ext)s",
+            "cookies": "cookies.txt"
         }
         
     if format_choice == "mp3":
