@@ -76,3 +76,10 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 read_timeout=60,
                 write_timeout=60,
             )
+        
+        # Delete temporary files after successful send
+        try:
+            os.remove(zip_file_path)
+            delete_playlist_data("download")
+        except Exception as e:
+            print(f"Error occurred during cleanup: {e}")
